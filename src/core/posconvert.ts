@@ -21,7 +21,7 @@ import { myersDiff, bodyBoundsOf, buildAlignment } from "./similarity";
 import { readFileSync, existsSync, readdirSync, writeFileSync } from "fs";
 import { resolve } from "path";
 
-const REF_TSV = process.env.REF ?? "comparejuan.tsv";
+const REF_TSV = process.env.REF ?? "tables/comparejuan.tsv";
 
 const argv = process.argv.slice(2);
 const flag = (n: string) => { const i = argv.indexOf(n); return i >= 0 ? argv[i + 1] : undefined; };

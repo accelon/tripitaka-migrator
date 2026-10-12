@@ -122,7 +122,7 @@ function scan(only?: string) {
     }
     void satCache;
   }
-  writeFileSync("cbeta-sat-diff.tsv", rows.join("\n") + "\n");
+  writeFileSync("tables/cbeta-sat-diff.tsv", rows.join("\n") + "\n");
   console.log(`【掃描】CBETA ${n} 卷`);
   console.log(`  卷起點相同 ${sameStart}、不同 ${diffStart}、SAT 查無此卷 ${noSat}`);
   console.log(`  明細 → cbeta-sat-diff.tsv`);

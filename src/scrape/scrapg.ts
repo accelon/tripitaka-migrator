@@ -19,7 +19,7 @@ import { join } from "path";
 
 const RAW = "goryeo-raw-html";
 const JUANINFO = "k-txt/juaninfo.tsv";
-const GAPS = "goryeo-gaps.tsv";
+const GAPS = "tables/goryeo-gaps.tsv";
 const BASE = "https://kabc.dongguk.edu/viewer/ajaxText?dataId=ABC_IT_K";
 
 /** KABC 把少數大經切成多個 dataId；鍵是後綴，值是「實際卷號 − API 卷參數」的偏移 */

@@ -23,8 +23,8 @@ import { compareHanzi } from "./similarity";
 
 const KDB = process.env.KDB ?? "K.db";
 const TDB = process.env.TDB ?? "T.db";
-const PROLOG = "juan-prolog.tsv";
-const EPILOG = "juan-epilog.tsv";
+const PROLOG = "tables/juan-prolog.tsv";
+const EPILOG = "tables/juan-epilog.tsv";
 const FRESH = process.argv.includes("--fresh");
 const li = process.argv.indexOf("--limit");
 const LIMIT = li >= 0 ? Number(process.argv[li + 1]) : Infinity;

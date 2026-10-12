@@ -93,7 +93,7 @@ for (const [vol, m] of [...byVol].sort((a, b) => a[0] - b[0])) {
   writeFileSync(join(OUT, `T${String(vol).padStart(2, "0")}.tsv`), lines.join("\n") + "\n");
   total += lines.length; written.push(vol);
 }
-writeFileSync("sat-notes.tsv", notesOut.join("\n") + "\n");
+writeFileSync("tables/sat-notes.tsv", notesOut.join("\n") + "\n");
 
 console.log(`【完成】${nFile} 個 raw 檔、${nLine.toLocaleString()} 行 → ${written.length} 冊、${total.toLocaleString()} 行`);
 console.log(`       校勘記 ${(notesOut.length - 1).toLocaleString()} 條 → sat-notes.tsv`);

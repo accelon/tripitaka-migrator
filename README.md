@@ -57,6 +57,7 @@ const r = convertTaishoGoryeo(db, { vol: 8, page: 748, col: "c", line: 24, off: 
 ```
 README.md
 docs/                     說明、報告、勘誤
+tables/                   分析與驗證產生的表（TSV）
 src/
   core/                   核心：位址格式、對齊演算法、二進位容器、SQLite 存取
   build/                  建置管線：文字 → 資料庫 → 對齊 → 可攜資產
@@ -67,6 +68,12 @@ src/
 public/                   成品：單頁應用與簡報
 gopos/                    Go 命令列工具（單一執行檔、資產內嵌）
 ```
+
+`tables/` 內的檔案由各工具產生（例如 `postest.ts` → `tables/postest-cases.tsv`），
+是報告與勘誤的證據來源，可重新產生。
+
+> 各藏的分卷表 `k-txt/juaninfo.tsv`、`t-txt/juaninfo.tsv` **不在此列**——
+> 它們是所屬資料集的一部分（同名、由 `makejuaninfo.ts`、`gen-goryeo2.ts` 寫入）。
 
 ## 建置流程
 

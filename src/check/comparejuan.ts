@@ -23,7 +23,7 @@ import { compareHanzi } from "../core/similarity";
 
 const KDB = process.env.KDB ?? "K.db";
 const TDB = process.env.TDB ?? "T.db";
-const OUT = process.env.OUT ?? "comparejuan.tsv";
+const OUT = process.env.OUT ?? "tables/comparejuan.tsv";
 const FRESH = process.argv.includes("--fresh");
 const li = process.argv.indexOf("--limit");
 const LIMIT = li >= 0 ? Number(process.argv[li + 1]) : Infinity;

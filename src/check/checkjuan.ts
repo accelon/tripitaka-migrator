@@ -125,7 +125,7 @@ const tsv = [HEAD.join("\t")];
 for (const r of rows) {
   tsv.push([r.k, r.kName.replace(/\t/g, " "), r.kJuan, r.t, r.tName.replace(/\t/g, " "), r.tJuan, r.status, r.note].join("\t"));
 }
-writeFileSync("checkjuan.tsv", tsv.join("\n") + "\n", "utf-8");
+writeFileSync("tables/checkjuan.tsv", tsv.join("\n") + "\n", "utf-8");
 console.log(`\n完整明細已寫入 checkjuan.tsv（${rows.length} 列）。耗時 ${((Date.now() - t0) / 1000).toFixed(1)}s`);
 
 kdb.close();

@@ -146,8 +146,8 @@ for (const dir of dirs) {
   }
   process.stdout.write(`\r掃描 ${dir}…`);
 }
-writeFileSync("sat-cbeta-posdiff.tsv", rows.join("\n") + "\n");
-writeFileSync("sat-cbeta-posonly.tsv", rowsOnly.join("\n") + "\n");
+writeFileSync("tables/sat-cbeta-posdiff.tsv", rows.join("\n") + "\n");
+writeFileSync("tables/sat-cbeta-posonly.tsv", rowsOnly.join("\n") + "\n");
 
 console.log(`\n\n【結果】（只比有內容的行，空行不計）`);
 console.log(`  位置完全相同：${sum.same} 部；有差異：${sum.diff} 部`);

@@ -20,7 +20,7 @@ import { writeFileSync } from "fs";
 
 const argv = process.argv.slice(2);
 const flag = (n: string, d?: string) => { const i = argv.indexOf(n); return i >= 0 ? argv[i + 1] : d; };
-const OUT = flag("--out", "postest-cases.tsv")!;
+const OUT = flag("--out", "tables/postest-cases.tsv")!;
 const WIN = Number(flag("--win", "8"));
 const THR = Number(flag("--thr", "0.7"));
 const SLACK = 8;
