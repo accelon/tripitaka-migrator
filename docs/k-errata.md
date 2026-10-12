@@ -1,6 +1,6 @@
 # 高麗藏來源資料勘誤（k-txt/）
 
-產生時間：2026-10-09 06:48:19　產生方式：`bun errata.ts`
+產生時間：2026-10-09 06:48:19　產生方式：`bun src/check/errata.ts`
 
 本檔記錄需要人工審閱的資料問題。**k-txt/ 下的經文 TSV（K01–K47）未被修改**；
 juaninfo.tsv 的冊號與總行數已修正（原檔保留為 `juaninfo.orig.tsv`）。

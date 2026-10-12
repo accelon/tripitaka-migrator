@@ -67,6 +67,12 @@ src/
   lab/                    實驗性程式（不納入版控）
 public/                   成品：單頁應用與簡報
 gopos/                    Go 命令列工具（單一執行檔、資產內嵌）
+
+資料（體積大或屬原始數據，不納版控）：
+cbeta/  goryeo-raw-html/  sat-raw-html/     CBETA、東國大學、SAT 原文
+k-txt/  t-txt/                              兩藏逐行文字（juaninfo.tsv 除外）
+k-txt.old/                                  補漏前的舊資料，保留供對照
+K.db  T.db  posmap.db                       打包與對齊資料庫
 ```
 
 `tables/` 內的檔案由各工具產生（例如 `postest.ts` → `tables/postest-cases.tsv`），

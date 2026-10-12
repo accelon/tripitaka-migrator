@@ -8,7 +8,7 @@
 | 檔案 | 用途 |
 |---|---|
 | `makejuaninfo.ts` | 產生修正後的 `k-txt/juaninfo.tsv`、`t-txt/juaninfo.tsv`（舊檔備份為 `juaninfo.orig.tsv`） |
-| `packdb.ts` | 打包：`bun packdb.ts k-txt K.db`、`bun packdb.ts t-txt T.db` |
+| `packdb.ts` | 打包：`bun src/build/packdb.ts k-txt K.db`、`bun src/build/packdb.ts t-txt T.db` |
 | `juanindex.ts` | 共用資料層：讀 juan 表、對照表解析、取卷經文（含只取正文） |
 | `similarity.ts` | 相似度演算法：Myers diff、正文／序言／附文判定 |
 | `checkjuan.ts` | 任務 1：檢查兩藏卷數是否一致 → `checkjuan.tsv` |
@@ -21,14 +21,14 @@
 ## 用法
 
 ```bat
-bun makejuaninfo.ts             :: 產生修正後的 juaninfo（--check 只檢查不寫檔）
-bun packdb.ts k-txt K.db        :: 重新打包高麗藏
-bun packdb.ts t-txt T.db        :: 重新打包大正藏
-bun checkjuan.ts                :: 卷數檢查
-bun comparejuan.ts --fresh      :: 逐卷比對（約 1.7 分鐘）
-bun juanmarks.ts --fresh        :: 序言／附文標記（約 1.7 分鐘）
-bun errata.ts                   :: 重新產生勘誤報告
-bun verify.ts 0001 0220 1       :: 抽查
+bun src/build/makejuaninfo.ts             :: 產生修正後的 juaninfo（--check 只檢查不寫檔）
+bun src/build/packdb.ts k-txt K.db        :: 重新打包高麗藏
+bun src/build/packdb.ts t-txt T.db        :: 重新打包大正藏
+bun src/check/checkjuan.ts                :: 卷數檢查
+bun src/check/comparejuan.ts --fresh      :: 逐卷比對（約 1.7 分鐘）
+bun src/core/juanmarks.ts --fresh        :: 序言／附文標記（約 1.7 分鐘）
+bun src/check/errata.ts                   :: 重新產生勘誤報告
+bun src/check/verify.ts 0001 0220 1       :: 抽查
 ```
 
 ## 資料管線
@@ -59,7 +59,7 @@ t-txt/juaninfo.tsv ─┴→ packdb.ts → T.db ─┘
   **419 行**，並讓 **T2266 卷 11、12** 整卷沒進資料庫。修正後 T.db 由 6,901,190 行／
   11,993 卷增為 **6,901,609 行／11,995 卷**。
 - 讀取 juaninfo 的新增 4 欄並寫入 `juan` 表。
-- 可用第二個參數指定輸出檔（`bun packdb.ts k-txt K.db`），並在打包後檢查卷範圍是否有資料。
+- 可用第二個參數指定輸出檔（`bun src/build/packdb.ts k-txt K.db`），並在打包後檢查卷範圍是否有資料。
 
 ## 只讀正文的 API
 

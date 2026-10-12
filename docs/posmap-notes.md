@@ -30,23 +30,23 @@
 
 ```bat
 :: 查位置
-bun posconvert.ts T01p0002c0405
-bun posconvert.ts --show T01p0002c0405          :: 另印兩藏原文前後文
+bun src/core/posconvert.ts T01p0002c0405
+bun src/core/posconvert.ts --show T01p0002c0405          :: 另印兩藏原文前後文
 
 :: 只讀 JSON，完全不碰 .db（就是網頁那條路）
-bun posconvert.ts --json posdata/0001.json T01p0002c0405
+bun src/core/posconvert.ts --json posdata/0001.json T01p0002c0405
 
 :: 驗證
-bun posselftest.ts
-bun posconvert.ts --verify                      :: 逐字驗證 posmap.db
-bun posconvert.ts --verify-asset gopos/asset/posmap.pos
-bun posconvert.ts --verify-web                  :: 驗證瀏覽器 bundle + 全部 JSON
-bun posconvert.ts --emit-cases cases.tsv --sample 60
-bun posdemotest.ts
+bun src/check/posselftest.ts
+bun src/core/posconvert.ts --verify                      :: 逐字驗證 posmap.db
+bun src/core/posconvert.ts --verify-asset gopos/asset/posmap.pos
+bun src/core/posconvert.ts --verify-web                  :: 驗證瀏覽器 bundle + 全部 JSON
+bun src/core/posconvert.ts --emit-cases cases.tsv --sample 60
+bun src/lab/posdemotest.ts
 
 :: 建庫
-bun buildpos.ts --all --pos gopos/asset/posmap.pos --json posdata
-bun buildpos.ts --from posmap.db --all --json posdata    :: 不重建，只重新匯出
+bun src/build/buildpos.ts --all --pos gopos/asset/posmap.pos --json posdata
+bun src/build/buildpos.ts --from posmap.db --all --json posdata    :: 不重建，只重新匯出
 
 :: Go 版
 cd gopos && go build -o poscli.exe .
@@ -191,7 +191,7 @@ poscli verify cases.tsv              跨實作對帳（Go vs Bun）
 
 ### 跨實作對帳
 
-`bun posconvert.ts --emit-cases cases.tsv --sample N` 產生期望值（每一卷每一行的行首與
+`bun src/core/posconvert.ts --emit-cases cases.tsv --sample N` 產生期望值（每一卷每一行的行首與
 偏置 0/1/5/37/99、雙向換算、以及不存在的頁碼與冊號），`poscli verify` 用 Go 重算並
 **逐欄比較**（含 `adjust`、`exact`、`note` 等文字欄位）：
 
