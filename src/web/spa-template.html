@@ -1,0 +1,608 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="light dark">
+<script>/* 先套用主題，避免載入時先閃一下白底 */try{var s=localStorage.getItem("tmTheme");if(s!=="dark"&&s!=="light")s=(window.matchMedia&&matchMedia("(prefers-color-scheme: dark)").matches)?"dark":"light";document.documentElement.setAttribute("data-theme",s);}catch(e){document.documentElement.setAttribute("data-theme","light");}</script>
+<meta name="format-detection" content="telephone=no">
+<title>高麗藏 ⇄ 大正藏 位置轉換</title>
+<style>
+  :root{
+    --accent:#8a5a2b; --accent2:#1f6f6b; --ink:#23201d; --muted:#6b6259;
+    --line:#e7ded2; --bg:#fdfcfa; --panel:#ffffff; --panel2:#f4efe8;
+    --tbg:#fceceb; --tline:#d07872; --tacc:#b03a34;
+    --kbg:#dfe7f7; --kline:#6d86c4; --kacc:#1c3f94; --kpost:#bed0f0;
+    --tagbg:#f2ece4; --okbg:#e2f1ed; --warnbg:#fdf0dc; --warnfg:#8f5f19;
+    --nonebg:#faf7f3; --pairline:#f2ece4;
+  }
+  html[data-theme="dark"]{
+    --accent:#d9a86a; --accent2:#4fb3a7; --ink:#e9e4db; --muted:#a89e90;
+    --line:#3a362c; --bg:#181713; --panel:#201e19; --panel2:#2a271f;
+    --tbg:#2b1d1c; --tline:#a85a52; --tacc:#f0a49b;
+    --kbg:#191f2e; --kline:#4a63a0; --kacc:#96b4ea; --kpost:#2b3a5c;
+    --tagbg:#2a271f; --okbg:#173029; --warnbg:#33280f; --warnfg:#e0b062;
+    --nonebg:#1e1c17; --pairline:#2c2820;
+  }
+  *{box-sizing:border-box;-webkit-text-size-adjust:100%}
+  body,.card,.blk,.side,.tag,.none,header,button,input[type=text],th,code{transition:background-color .18s ease,color .18s ease,border-color .18s ease}
+  html,body{margin:0;padding:0}
+  body{background:var(--bg);color:var(--ink);line-height:1.7;
+       font-family:"Noto Sans TC","PingFang TC","Microsoft JhengHei","Hiragino Sans",system-ui,sans-serif;
+       font-size:16px;overflow-wrap:anywhere}
+  .wrap{max-width:920px;margin:0 auto;padding:0 16px}
+  header{padding:18px 0 12px;border-bottom:1px solid var(--line)}
+  h1{font-size:clamp(17px,4.6vw,21px);margin:0;font-weight:700}
+  .sub{color:var(--muted);font-size:clamp(11.5px,3.2vw,13px);margin-top:3px}
+  .hd{display:flex;gap:12px;align-items:flex-start}
+  .hdtext{min-width:0;flex:1 1 auto}
+  /* 按鈕底色與目前主題相反：亮底時是深色鈕、暗底時是亮色鈕，最顯眼 */
+  .themebtn{flex:0 0 auto;font-size:clamp(12px,3.3vw,13.5px);padding:8px 14px;line-height:1.35;
+    white-space:nowrap;background:var(--ink);border:1px solid var(--ink);border-radius:10px;
+    color:var(--bg);font-weight:700;letter-spacing:.02em}
+  .themebtn:hover{opacity:.86}
+  .themebtn:active{transform:scale(.97)}
+  h2{font-size:clamp(13px,3.6vw,15px);color:var(--accent);margin:22px 0 8px;font-weight:700}
+  .pickers{display:grid;grid-template-columns:repeat(4,1fr);gap:9px;margin:11px 0 9px}
+  .pk.w2{grid-column:span 2}
+  @media (max-width:700px){ .pk.w2{grid-column:1/-1} }
+  @media (max-width:560px){ .pickers{grid-template-columns:1fr 1fr} }
+  /* 標籤與下拉組成同一個控制項：標籤在左，形成一體 */
+  .pk{display:flex;align-items:stretch;min-width:0;border:1px solid var(--line);
+    border-radius:10px;background:var(--panel);overflow:hidden}
+  .pk:focus-within{border-color:var(--accent2);box-shadow:0 0 0 3px rgba(31,111,107,.12)}
+  .pk.wide{grid-column:1/-1}
+  .pk>span{display:flex;align-items:center;flex:0 0 auto;padding:0 11px;background:var(--panel2);
+    color:var(--muted);font-size:clamp(12.5px,3.4vw,14px);font-weight:700;letter-spacing:.06em;
+    border-right:1px solid var(--line);white-space:nowrap}
+  select{flex:1 1 auto;font:inherit;font-size:clamp(13.5px,3.8vw,15px);padding:10px 11px;border:0;
+    border-radius:0;background:transparent;color:var(--ink);width:100%;min-width:0;appearance:none;
+    background-image:linear-gradient(45deg,transparent 50%,var(--muted) 50%),linear-gradient(135deg,var(--muted) 50%,transparent 50%);
+    background-position:calc(100% - 15px) calc(50% + 1px),calc(100% - 10px) calc(50% + 1px);
+    background-size:5px 5px,5px 5px;background-repeat:no-repeat;padding-right:28px}
+  select:focus{outline:none}
+  .io{display:flex;gap:8px;flex-wrap:wrap;margin:4px 0 6px}
+  input[type=text]{flex:1 1 200px;min-width:0;font:inherit;font-size:16px;
+    font-family:ui-monospace,"Cascadia Mono",Consolas,monospace;
+    padding:12px 14px;border:1px solid var(--line);border-radius:10px;background:var(--panel);color:var(--ink)}
+  input[type=text]:focus{outline:none;border-color:var(--accent2);box-shadow:0 0 0 3px rgba(31,111,107,.12)}
+  button{font:inherit;font-size:15px;cursor:pointer;border-radius:10px;border:1px solid var(--line);
+    background:var(--panel);color:var(--ink);padding:12px 18px;transition:.15s;-webkit-tap-highlight-color:transparent}
+  button:active{transform:scale(.985)}
+  .go{background:var(--accent2);border-color:var(--accent2);color:#fff;font-weight:700;flex:0 0 auto;padding:12px 24px}
+  .hint{color:var(--muted);font-size:clamp(11px,3.1vw,12.5px);line-height:1.65}
+  code{font-family:ui-monospace,"Cascadia Mono",Consolas,monospace;background:var(--panel2);padding:1px 5px;border-radius:4px;font-size:.94em}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px 16px;margin:12px 0}
+  .addr{display:flex;flex-wrap:wrap;align-items:center;gap:8px;
+    font-family:ui-monospace,"Cascadia Mono",Consolas,monospace;font-size:clamp(13.5px,3.8vw,15.5px);line-height:1.9}
+  .addr .lb{display:inline-flex;align-items:center;gap:6px;min-width:5.9em;color:var(--muted);
+    font-family:inherit;vertical-align:middle}
+  .addr b{color:var(--accent2)}
+  .tags{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+  .tag{font-size:clamp(10.5px,2.9vw,11.5px);padding:3px 10px;border-radius:999px;background:var(--tagbg);color:var(--muted);white-space:nowrap}
+  .tag.ok{background:var(--okbg);color:var(--accent2)}
+  .tag.warn{background:var(--warnbg);color:var(--warnfg)}
+  .note{color:var(--muted);font-size:clamp(11px,3.1vw,12.5px);margin-top:8px;line-height:1.6}
+  /* 外鏈按鈕：貼在位置同一行，色系跟著所在那一側（大正藏紅、高麗藏藍） */
+  .ext{display:inline-flex;gap:6px;flex-wrap:wrap}
+  .ext a{display:inline-flex;align-items:center;gap:4px;font-size:clamp(10.5px,2.9vw,12px);font-weight:700;
+    text-decoration:none;border:1px solid var(--line);border-radius:999px;
+    padding:2px 10px 2px 7px;background:var(--panel);white-space:nowrap;transition:.15s}
+  .ext.t a{color:var(--tacc);border-color:var(--tline)}
+  .ext.k a{color:var(--kacc);border-color:var(--kline)}
+  .ext.t a:hover{background:var(--tbg);border-color:var(--tacc)}
+  .ext.k a:hover{background:var(--kbg);border-color:var(--kacc)}
+  .ico{width:1.05em;height:1.05em;fill:currentColor;flex:0 0 auto;opacity:.9}
+  .pclink{color:inherit;text-decoration:none;border-bottom:1px dotted var(--line)}
+  .pclink:hover{color:var(--accent2);border-bottom-color:var(--accent2)}
+  .ico2{width:1.05em;height:1.05em;fill:currentColor;opacity:.5;vertical-align:-.16em;margin-left:4px}
+  .ico2:hover{opacity:1;color:var(--accent2)}
+  .none{color:var(--muted);font-size:clamp(12.5px,3.5vw,14px);padding:16px;background:var(--nonebg);
+    border-radius:12px;border:1px dashed var(--line);text-align:center;line-height:1.8}
+  .cap{font-size:clamp(12px,3.3vw,13.5px);color:var(--muted);margin-bottom:10px;padding-bottom:9px;border-bottom:1px solid var(--line)}
+  .cap b{color:var(--ink);font-size:1.1em}
+  .pair{padding:9px 0;border-bottom:1px solid var(--pairline)}
+  .pair:last-child{border-bottom:none}
+  .side{display:flex;gap:8px;align-items:center;padding:5px 9px;border-radius:7px;margin:3px 0}
+  .side.t{background:var(--tbg);border-left:3px solid var(--tline)}
+  .side.k{background:var(--kbg);border-left:3px solid var(--kline)}
+  .side.k .pre{color:var(--muted)}
+  .side.k .post{background:var(--kpost);border-radius:4px;padding:0 3px;margin:0 -3px}
+  .fl{width:clamp(17px,4.4vw,24px);height:auto;flex:0 0 auto;border-radius:2px}
+  .blk{border-radius:9px;padding:9px 11px;margin:7px 0}
+  .blk.t{background:var(--tbg);border-left:3px solid var(--tline)}
+  .blk.k{background:var(--kbg);border-left:3px solid var(--kline)}
+  .blk .addr{margin:0}
+  .blk .nm{margin:1px 0 0}
+  .nm{font-size:clamp(11.5px,3.2vw,13px);color:var(--muted);margin:-1px 0 8px;padding-left:4.4em;
+      overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .pcl{flex:0 0 auto;min-width:11ch;font-family:ui-monospace,"Cascadia Mono",Consolas,monospace;
+       font-size:clamp(10px,2.8vw,11.5px);color:var(--muted);white-space:nowrap}
+  .tx{flex:1 1 auto;font-size:clamp(13.5px,3.7vw,15px);line-height:1.75}
+  .samples{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;margin:10px 0 0}
+  .samples button{text-align:left;padding:11px 13px;line-height:1.45}
+  .samples b{display:block;font-size:clamp(13px,3.6vw,14.5px);font-weight:700}
+  .samples span{display:block;font-size:clamp(10.5px,2.9vw,11.5px);color:var(--muted);margin-top:2px}
+  footer{margin:32px 0 48px;padding-top:16px;border-top:1px solid var(--line);
+    color:var(--muted);font-size:clamp(11px,3.1vw,12.5px);line-height:1.8}
+  .wechat{display:inline-block;background:var(--accent2);color:#fff;padding:1px 9px;border-radius:999px;font-weight:700;font-size:.95em}
+  .center{text-align:center}
+  @media (max-width:420px){
+    .addr .lb{min-width:0;display:flex}
+    .nm{padding-left:0}
+    .go{flex:1 1 100%}
+  }
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs><g id="fT"><rect width="30" height="20" rx="2.5" fill="#fff" stroke="#d8cfc4" stroke-width=".8"/><circle cx="15" cy="10" r="4.6" fill="#bc002d"/></g><g id="fK"><rect width="30" height="20" rx="2.5" fill="#fff" stroke="#d8cfc4" stroke-width=".8"/><circle cx="15" cy="10" r="4.6" fill="#cd2e3a"/><path d="M15 5.4A4.6 4.6 0 0 0 15 14.6A2.3 2.3 0 0 0 15 10A2.3 2.3 0 0 1 15 5.4Z" fill="#0047a0"/><g stroke="#1a1a1a" stroke-width="1.05"><g transform="translate(6.9,5.6) rotate(-56)"><line x1="-2.6" y1="-1.5" x2="2.6" y2="-1.5"/><line x1="-2.6" y1="0" x2="2.6" y2="0"/><line x1="-2.6" y1="1.5" x2="2.6" y2="1.5"/></g><g transform="translate(23.1,14.4) rotate(-56)"><line x1="-2.6" y1="-1.5" x2="-0.7" y2="-1.5"/><line x1="0.7" y1="-1.5" x2="2.6" y2="-1.5"/><line x1="-2.6" y1="0" x2="-0.7" y2="0"/><line x1="0.7" y1="0" x2="2.6" y2="0"/><line x1="-2.6" y1="1.5" x2="-0.7" y2="1.5"/><line x1="0.7" y1="1.5" x2="2.6" y2="1.5"/></g><g transform="translate(23.1,5.6) rotate(56)"><line x1="-2.6" y1="-1.5" x2="-0.7" y2="-1.5"/><line x1="0.7" y1="-1.5" x2="2.6" y2="-1.5"/><line x1="-2.6" y1="0" x2="2.6" y2="0"/><line x1="-2.6" y1="1.5" x2="-0.7" y2="1.5"/><line x1="0.7" y1="1.5" x2="2.6" y2="1.5"/></g><g transform="translate(6.9,14.4) rotate(56)"><line x1="-2.6" y1="-1.5" x2="2.6" y2="-1.5"/><line x1="-2.6" y1="0" x2="-0.7" y2="0"/><line x1="0.7" y1="0" x2="2.6" y2="0"/><line x1="-2.6" y1="1.5" x2="2.6" y2="1.5"/></g></g></g></defs></svg>
+
+<header><div class="wrap hd">
+  <button id="theme" class="themebtn" type="button" aria-pressed="false" title="切換為暗底">暗底</button>
+  <div class="hdtext">
+    <h1>高麗藏 ⇄ 大正藏　位置轉換</h1>
+    <div class="sub">離線單檔　·　內建 <span id="counts">__COUNTS__</span> 的逐字對照　·　版本 __BUILD__　·　不連線、不須安裝</div>
+  </div>
+</div></header>
+
+<div class="wrap">
+
+  <h2>選取大正藏位置</h2>
+  <div class="pickers">
+    <label class="pk w2"><span>冊</span><select id="selVol"></select></label>
+    <label class="pk w2"><span>經</span><select id="selSutra"></select></label>
+    <label class="pk"><span>卷</span><select id="selJuan"></select></label>
+    <label class="pk"><span>頁</span><select id="selPage"></select></label>
+    <label class="pk"><span>欄</span><select id="selCol"></select></label>
+    <label class="pk"><span>行</span><select id="selLine"></select></label>
+  </div>
+  <div class="io">
+    <input type="text" id="addr" placeholder="T08p0748c2400" autocomplete="off" autocapitalize="characters" spellcheck="false" inputmode="text">
+  </div>
+  <div class="hint">
+    選單與輸入框<b>雙向同步</b>，改了任一邊都會立刻轉換，不必按按鈕。
+    位址格式：<code>T</code> ＋ 冊 ＋ <code>p</code> ＋ 頁 ＋ 欄 ＋ 行 ＋ 字。<span id="hint"></span>
+  </div>
+
+  <div id="result"></div>
+
+  <h2>經文對照</h2>
+  <div id="text"><div class="none">按最下方的範例，看兩藏逐行對照。</div></div>
+
+  <h2>試試範例</h2>
+  <div class="samples" id="samples"></div>
+
+  <footer>
+    本頁完全離線執行，對照資料已壓縮內嵌，不連任何伺服器。<br>
+    需要<b>批次處理</b>（一次轉換整批位置、或產生全藏對照表），請加微信 <span class="wechat">Sukhanika</span> 索取命令列程式。
+  </footer>
+</div>
+
+<script>
+const B64 = "__DATA__";
+const SAMPLES = /*__SAMPLES_JSON__*/null;
+const NAMES = /*__NAMES_JSON__*/null;
+const COL = "abcdefg";
+const COLNAME = ["上", "中", "下"];   // 刻本每頁分上／中／下三欄，即 a／b／c
+/* 大正藏 冊 → 部名。依《大正新脩大藏經》分部；跨部的冊並列兩部。
+   若與您手邊的目錄有出入，改這一張表即可。 */
+const BU = {1:"阿含部",2:"阿含部",3:"本緣部",4:"本緣部",5:"般若部",6:"般若部",7:"般若部",8:"般若部",
+  9:"法華部・華嚴部",10:"華嚴部",11:"寶積部",12:"涅槃部",13:"大集部",
+  14:"經集部",15:"經集部",16:"經集部",17:"經集部",
+  18:"密教部",19:"密教部",20:"密教部",21:"密教部",22:"律部",23:"律部",24:"律部",
+  25:"釋經論部",26:"釋經論部・毗曇部",27:"毗曇部",28:"毗曇部",29:"毗曇部",
+  30:"中觀部・瑜伽部",31:"瑜伽部",32:"論集部",
+  33:"經疏部",34:"經疏部",35:"經疏部",36:"經疏部",37:"經疏部",38:"經疏部",39:"經疏部",
+  40:"律疏部・論疏部",41:"論疏部",42:"論疏部",43:"論疏部",44:"論疏部・諸宗部",
+  45:"諸宗部",46:"諸宗部",47:"諸宗部",48:"諸宗部",49:"史傳部",50:"史傳部",51:"史傳部",52:"史傳部",
+  53:"事彙部",54:"事彙部・外教部",55:"目錄部"};
+for (let v = 56; v <= 84; v++) BU[v] = "古逸部";
+BU[85] = "古逸部・疑似部";
+/* 國旗：日本（精確）／韓國太極旗（圖示尺寸下的簡化繪法，四卦依標準位置） */
+const FLAG_T = '<svg class="fl" viewBox="0 0 30 20" role="img" aria-label="日本"><use href="#fT"/></svg>';
+const FLAG_K = '<svg class="fl" viewBox="0 0 30 20" role="img" aria-label="韓國"><use href="#fK"/></svg>';
+const pad = (n, w) => String(n).padStart(w, "0");
+const pclStr = s => { const r = s % 1000; return pad((s - r) / 1000, 4) + COL[Math.floor(r / 100)] + pad(r % 100, 2); };
+const seqOfPcl = p => Number(p.slice(0, 4)) * 1000 + COL.indexOf(p[4]) * 100 + Number(p.slice(5));
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+/* 外部來源連結：網址形式在抓取階段已實證可用 */
+const ICON_EXT = '<svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M14 3h7v7h-2V6.4l-8.3 8.3-1.4-1.4L17.6 5H14V3zM5 5h5v2H7v10h10v-3h2v5H5V5z"/></svg>';
+const ICON_BOOK = '<svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M11 4.6C9.6 3.6 7.6 3 5.4 3H3v15h2.6c2 0 3.8.6 5.4 1.7V4.6zm2 0v15.1c1.6-1.1 3.4-1.7 5.4-1.7H21V3h-2.4c-2.2 0-4.2.6-5.6 1.6z"/></svg>';
+const satUrl = (ts, vol, pcl) =>
+  "https://21dzk.l.u-tokyo.ac.jp/SAT2018/satdb2018pre.php?ob=1&mode2=2&mode=detail&nonum=&kaeri=&useid=" +
+  ts + "_." + pad(vol, 2) + "." + pcl.slice(0, 4) + pcl[4] + pcl.slice(5);
+const cbetaUrl = (ts, tj) => "https://cbetaonline.dila.edu.tw/zh/T" + ts + "_" + pad(tj, 3);
+/* DILA 閱藏系統（圖版影像）：id 形式為 Tv + 冊(2) + p + 頁(4)，例 Tv04p0002 */
+const dilaUrl = (vol, pcl) => "https://dia.dila.edu.tw/uv3/index.html?id=Tv" + pad(vol, 2) + "p" + pcl.slice(0, 4);
+const ICON_IMG = '<svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 5h18v14H3V5zm2 2v7.6l3.4-3.4 2.6 2.6L14.6 10l4.4 4.4V7H5zm3 1.5a1.6 1.6 0 1 0 0 3.2 1.6 1.6 0 0 0 0-3.2z"/></svg>';
+const dongUrl = (ks, kj, kvol, pcl) =>
+  "https://kabc.dongguk.edu/viewer/view?dataId=ABC_IT_K" + ks + "_T_" + pad(kj, 3) +
+  "&imgId=" + pad(kvol, 3) + "_" + pcl.slice(0, 4) + "_" + pcl[4];
+const fmtAddr = (side, vol, pcl, off) => side + pad(vol, 2) + "p" + pcl + (off < 100 ? pad(off, 2) : "." + off);
+
+function dec32(b, pos) { let v = 0, sh = 1; for (;;) { const c = b[pos++]; v += (c & 0x7f) * sh; if ((c & 0x80) === 0) break; sh *= 128; } return { value: v, pos }; }
+function readGeom(b, pos) {
+  let r = dec32(b, pos); const vol = r.value; pos = r.pos;
+  r = dec32(b, pos); const n = r.value; pos = r.pos;
+  r = dec32(b, pos); const han = r.value; pos = r.pos;
+  const seq = new Int32Array(n); let prev = 0;
+  for (let i = 0; i < n; i++) { r = dec32(b, pos); pos = r.pos; prev += r.value; seq[i] = prev; }
+  const start = new Int32Array(n + 1); let acc = 0;
+  for (let i = 0; i < n; i++) { start[i] = acc; r = dec32(b, pos); pos = r.pos; acc += r.value; }
+  start[n] = acc;
+  return { g: { vol: vol, seq: seq, start: start, n: n, han: han }, pos: pos };
+}
+function decodeAlign(b) {
+  let pos = 0;
+  pos++; const flags = b[pos++];
+  let r = readGeom(b, pos); const t = r.g; pos = r.pos;
+  r = readGeom(b, pos); const k = r.g; pos = r.pos;
+  const num = () => { const x = dec32(b, pos); pos = x.pos; return x.value; };
+  const tBody = [num(), num()]; num(); num();
+  const kBody = [num(), num()]; num(); num();
+  const nRuns = num();
+  const runs = new Int32Array(nRuns * 3);
+  let pt = 0, pk = 0;
+  for (let i = 0; i < nRuns; i++) {
+    const t0 = pt + num(), k0 = pk + num(), len = num();
+    runs[i * 3] = t0; runs[i * 3 + 1] = k0; runs[i * 3 + 2] = len; pt = t0 + len; pk = k0 + len;
+  }
+  return { t: t, k: k, tBody: tBody, kBody: kBody, runs: runs, coarse: (flags & 1) !== 0 };
+}
+function findLine(g, seq) {
+  const a = g.seq; let lo = 0, hi = a.length - 1, ans = 0;
+  while (lo <= hi) { const m = (lo + hi) >> 1; if (a[m] <= seq) { ans = m; lo = m + 1; } else hi = m - 1; }
+  if (!a.length) return [0, false];
+  if (a[ans] === seq) return [ans, true];
+  if (ans + 1 < a.length && Math.abs(a[ans + 1] - seq) < Math.abs(a[ans] - seq)) return [ans + 1, false];
+  return [ans, false];
+}
+function lineIndexAt(g, off) {
+  const s = g.start; let lo = 0, hi = s.length - 1, ans = 0;
+  while (lo <= hi) { const m = (lo + hi) >> 1; if (s[m] <= off) { ans = m; lo = m + 1; } else hi = m - 1; }
+  return ans;
+}
+function mapFwd(runs, x) {
+  const n = runs.length / 3; if (!n) return [0, false];
+  let lo = 0, hi = n - 1, ans = -1;
+  while (lo <= hi) { const m = (lo + hi) >> 1; if (runs[m * 3] <= x) { ans = m; lo = m + 1; } else hi = m - 1; }
+  if (ans < 0) return [runs[1], false];
+  const t0 = runs[ans * 3], k0 = runs[ans * 3 + 1], len = runs[ans * 3 + 2];
+  return x < t0 + len ? [k0 + (x - t0), true] : [k0 + len, false];
+}
+
+let IDX = null, PAY = null, BLOB = 0;
+const CACHE = new Map();
+
+async function load() {
+  const bytes = Uint8Array.from(atob(B64), c => c.charCodeAt(0));
+  const dv = new DataView(bytes.buffer);
+  const codec = dv.getUint8(10), rawLen = dv.getUint32(12, true), compLen = dv.getUint32(20, true);
+  const body = bytes.subarray(36, 36 + compLen);
+  let pay;
+  if (codec === 0) pay = body;
+  else {
+    const fmt = codec === 2 ? "gzip" : codec === 1 ? "deflate" : null;
+    if (!fmt || typeof DecompressionStream === "undefined") throw new Error("此瀏覽器不支援解壓（codec=" + codec + "）");
+    pay = new Uint8Array(await new Response(new Blob([body]).stream().pipeThrough(new DecompressionStream(fmt))).arrayBuffer());
+  }
+  if (pay.length !== rawLen) throw new Error("解壓後長度不符");
+  PAY = pay;
+  let o = 0;
+  const rd32 = () => { const v = (pay[o] | (pay[o + 1] << 8) | (pay[o + 2] << 16) | (pay[o + 3] * 2 ** 24)) >>> 0; o += 4; return v; };
+  const rd16 = () => { const v = pay[o] | (pay[o + 1] << 8); o += 2; return v; };
+  const nSutras = rd32(), ids = [], dec = new TextDecoder();
+  for (let i = 0; i < nSutras; i++) { const n = pay[o++]; ids.push(dec.decode(pay.subarray(o, o + n))); o += n; }
+  const nJuans = rd32(), index = [];
+  for (let i = 0; i < nJuans; i++) {
+    const ts = ids[rd16()], ks = ids[rd16()];
+    const tjuan = rd16(), kjuan = rd16(), tVol = rd16(), kVol = rd16();
+    const tS = rd32(), tE = rd32(); rd32(); rd32();
+    const blobOff = rd32(), blobLen = rd32();
+    index.push({ ts: ts, ks: ks, tjuan: tjuan, kjuan: kjuan, tVol: tVol, kVol: kVol, tS: tS, tE: tE, blobOff: blobOff, blobLen: blobLen });
+  }
+  BLOB = o; IDX = index;
+}
+function recAt(i) {
+  if (CACHE.has(i)) return CACHE.get(i);
+  const e = IDX[i];
+  const r = decodeAlign(PAY.subarray(BLOB + e.blobOff, BLOB + e.blobOff + e.blobLen));
+  const rec = Object.assign({}, r, { ksutra: e.ks, kjuan: e.kjuan, tsutra: e.ts, tjuan: e.tjuan });
+  CACHE.set(i, rec);
+  return rec;
+}
+function locate(vol, seq) {
+  for (let i = 0; i < IDX.length; i++) { const e = IDX[i]; if (e.tVol === vol && e.tS <= seq && seq <= e.tE) return i; }
+  return -1;
+}
+
+function convertT(raw) {
+  const m = /^T(\d{1,2})p?(\d{4})([a-g])(\d{2})(?:\.(\d+)|(\d{2}))?$/i.exec(String(raw || "").trim());
+  if (!m) return { ok: false, msg: "位址格式看不懂。請照 <b>T</b> ＋ 冊 ＋ <b>p</b> ＋ 頁 ＋ 欄 ＋ 行 ＋ 字，例如 <code>T01p0005b0503</code>" };
+  const vol = Number(m[1]), pcl = m[2] + m[3].toLowerCase() + m[4];
+  const off = m[5] !== undefined ? Number(m[5]) : (m[6] !== undefined ? Number(m[6]) : 0);
+  const i = locate(vol, seqOfPcl(pcl));
+  if (i < 0) return { ok: false, msg: "這個位置不在內建的對照範圍內。<br>本頁收錄大正藏第 1–85 冊中可與高麗藏對照的 1,474 部經。" };
+  const r = recAt(i);
+  const f = findLine(r.t, seqOfPcl(pcl));
+  const li = f[0], hit = f[1];
+  const o2 = clamp(off, 0, r.t.start[li + 1] - r.t.start[li]);
+  let x = r.t.start[li] + o2;
+  const notes = []; let adjust = "none";
+  if (x < r.tBody[0]) { x = r.tBody[0]; adjust = "preface"; notes.push("輸入落在序文，已移到該卷正文第一字"); }
+  else if (x > r.tBody[1]) { x = r.tBody[1]; adjust = "appendix"; notes.push("輸入落在附文，已移到該卷正文最後一字右邊"); }
+  const mf = mapFwd(r.runs, x);
+  let exact = mf[1];
+  let y = clamp(mf[0], r.kBody[0], r.kBody[1]);
+  if (!exact) notes.push("該處是單邊插文，高麗藏無對應字，已取最接近的位置");
+  if (r.coarse) notes.push("本卷對齊粗略，僅供參考");
+  const kli = lineIndexAt(r.k, y), kSeq = r.k.seq[kli], kOff = y - r.k.start[kli];
+  const kPcl = pclStr(kSeq);
+  return {
+    ok: true, exact: exact, adjust: adjust, notes: notes, hit: hit,
+    tsutra: r.tsutra, tjuan: r.tjuan, tInput: fmtAddr("T", r.t.vol, pcl, o2), tVol: r.t.vol, tPcl: pcl,
+    ksutra: r.ksutra, kjuan: r.kjuan, kAddr: fmtAddr("K", r.k.vol, kPcl, kOff), kVol: r.k.vol, kPcl: kPcl,
+    tHan: r.tBody[1] - r.tBody[0], kHan: r.kBody[1] - r.kBody[0]
+  };
+}
+
+const $ = id => document.getElementById(id);
+const esc = s => String(s == null ? "" : s).replace(/[&<>]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]));
+function showResult(h) { $("result").innerHTML = h; }
+function showText(h) { $("text").innerHTML = h; }
+
+/* 只負責「結果」區；經文區由呼叫者決定，兩者不互相覆蓋 */
+function renderResult(a) {
+  if (!a.ok) { showResult('<div class="card"><div class="none">' + a.msg + "</div></div>"); return; }
+  const tags = ['<span class="tag' + (a.exact ? " ok" : " warn") + '">' + (a.exact ? "精確對應" : "非一對一，取最接近位置") + "</span>"];
+  if (a.adjust === "preface") tags.push('<span class="tag warn">輸入在序文</span>');
+  if (a.adjust === "appendix") tags.push('<span class="tag warn">輸入在附文</span>');
+  if (!a.hit) tags.push('<span class="tag warn">該行不存在，已取最接近的行</span>');
+  const tn = (NAMES && NAMES.t[a.tsutra]) || "";
+  const kn = (NAMES && NAMES.k[a.ksutra]) || "";
+  showResult('<div class="card">' +
+    '<div class="blk t"><div class="addr"><span class="lb">' + FLAG_T + '大正藏</span><b>' + esc(a.tInput) + "</b>" +
+    '<span class="ext t"><a href="' + satUrl(a.tsutra, a.tVol, a.tPcl) + '" target="_blank" rel="noopener" title="SAT 大正藏テキストデータベース（此行 ' + esc(a.tPcl) + '）">' + ICON_EXT + 'SAT 官網</a>' +
+    '<a href="' + cbetaUrl(a.tsutra, a.tjuan) + '" target="_blank" rel="noopener" title="CBETA 線上閱讀（卷 ' + a.tjuan + '；此行 ' + esc(a.tPcl) + '）">' + ICON_EXT + 'CBETA</a>' +
+    '<a href="' + dilaUrl(a.tVol, a.tPcl) + '" target="_blank" rel="noopener" title="DILA 閱藏系統 圖版影像（第 ' + a.tVol + ' 冊 第 ' + a.tPcl.slice(0, 4) + ' 頁）">' + ICON_IMG + '圖版</a></span></div>' +
+    '<div class="nm">T' + a.tsutra + (tn ? "　" + esc(tn) : "") + "　卷 " + a.tjuan + "</div></div>" +
+    '<div class="blk k"><div class="addr"><span class="lb">' + FLAG_K + '高麗藏</span><b>' + esc(a.kAddr) + "</b>" +
+    '<span class="ext k"><a href="' + dongUrl(a.ksutra, a.kjuan, a.kVol, a.kPcl) + '" target="_blank" rel="noopener" title="東國大學 高麗大藏經（' + pad(a.kVol, 3) + '_' + esc(a.kPcl.slice(0, 4)) + '_' + esc(a.kPcl[4]) + '）">' + ICON_BOOK + '東國大學</a></span></div>' +
+    '<div class="nm">K' + a.ksutra + (kn ? "　" + esc(kn) : "") + "　卷 " + a.kjuan + "</div></div>" +
+    '<div class="tags">' + tags.join("") + "</div>" +
+    (a.notes.length ? '<div class="note">' + a.notes.map(esc).join("　·　") + "</div>" : "") +
+    '<div class="note">本卷正文：大正藏 ' + a.tHan.toLocaleString() + " 字、高麗藏 " + a.kHan.toLocaleString() + " 字</div>" +
+    "</div>");
+}
+
+/* 範例數由 SAMPLES 現算，日後增減範例不必再改這句話 */
+const NO_TEXT = () => '<div class="none"><b>無庫存經文</b><br>位置已轉換，但本頁只內建下方 ' +
+  SAMPLES.length + ' 個範例的經文。</div>';
+
+/* ---------- 下拉選單 ---------- */
+let SUTRAS = null;                       // 每筆＝一個（經, 冊）組合
+const KEY2I = new Map();                 // "經號/卷" → IDX 索引
+
+function buildIndex() {
+  for (let i = 0; i < IDX.length; i++) KEY2I.set(IDX[i].ts + "/" + IDX[i].tjuan, i);
+  const byKey = new Map();
+  for (const e of IDX) {
+    const k = e.ts + "@" + e.tVol;
+    if (!byKey.has(k)) byKey.set(k, { ts: e.ts, tVol: e.tVol, juans: [], name: (NAMES && NAMES.t[e.ts]) || "" });
+    byKey.get(k).juans.push(e.tjuan);
+  }
+  SUTRAS = [...byKey.values()].sort((a, b) => a.ts.localeCompare(b.ts) || a.tVol - b.tVol);
+  for (const s of SUTRAS) s.juans.sort((a, b) => a - b);
+  const cnt = new Map();
+  for (const s of SUTRAS) cnt.set(s.ts, (cnt.get(s.ts) || 0) + 1);
+  for (const s of SUTRAS) s.nVols = cnt.get(s.ts);   // 這部經橫跨幾冊
+  BYVOL = new Map();
+  for (let i = 0; i < SUTRAS.length; i++) {
+    const v = SUTRAS[i].tVol;
+    if (!BYVOL.has(v)) BYVOL.set(v, []);
+    BYVOL.get(v).push(i);
+  }
+  VOLS = [...BYVOL.keys()].sort((a, b) => a - b);
+}
+/** 冊 → 該冊的經（存 SUTRAS 索引） */
+let VOLS = [], BYVOL = new Map();
+function fillVol() {
+  $("selVol").innerHTML = VOLS.map(v => '<option value="' + v + '">' + pad(v, 2) + "　" + esc(BU[v] || "") + "</option>").join("");
+}
+function fillSutra(vol) {
+  const list = BYVOL.get(Number(vol)) || [];
+  $("selSutra").innerHTML = list.map(i => {
+    const s = SUTRAS[i];
+    // 橫跨多冊的經（如大般若經），卷次範圍依「本冊」實際的卷現算，不用經名裡那個舊註記
+    const rng = s.nVols > 1 ? "（卷 " + s.juans[0] + "–" + s.juans[s.juans.length - 1] + "）" : "";
+    return '<option value="' + i + '">T' + s.ts + "　" + esc(s.name || "（無經名）") + rng + "</option>";
+  }).join("");
+}
+function cascadeFromVol() {
+  fillSutra(Number($("selVol").value));
+  cascadeFromSutra();
+}
+function recOfJuan(si, tj) {
+  const i = KEY2I.get(SUTRAS[si].ts + "/" + tj);
+  return i === undefined ? null : recAt(i);
+}
+function fillJuan(si) {
+  $("selJuan").innerHTML = SUTRAS[si].juans.map(j => '<option value="' + j + '">' + j + "</option>").join("");
+}
+/** 該卷某頁實際存在的行（流水號） */
+function pageSeqs(si, tj, page) {
+  const rec = recOfJuan(si, tj);
+  if (!rec) return [];
+  return Array.from(rec.t.seq).filter(s => Math.floor(s / 1000) === page);
+}
+function fillPage(si, tj) {
+  const rec = recOfJuan(si, tj);
+  if (!rec) { $("selPage").innerHTML = ""; return; }
+  const pages = [...new Set(Array.from(rec.t.seq).map(s => Math.floor(s / 1000)))].sort((a, b) => a - b);
+  $("selPage").innerHTML = pages.map(p => '<option value="' + p + '">' + p + "</option>").join("");
+}
+function fillCol(si, tj, page) {
+  const cols = [...new Set(pageSeqs(si, tj, page).map(s => Math.floor(s / 100) % 10))].sort((a, b) => a - b);
+  $("selCol").innerHTML = cols.map(c => '<option value="' + c + '">' + COL[c] + "　" + COLNAME[c] + "</option>").join("");
+}
+function fillLine(si, tj, page, col) {
+  const lines = pageSeqs(si, tj, page).filter(s => Math.floor(s / 100) % 10 === col).map(s => s % 100).sort((a, b) => a - b);
+  $("selLine").innerHTML = lines.map(l => '<option value="' + l + '">' + pad(l, 2) + "</option>").join("");
+}
+/** 由下拉選單組出位址（字偏移預設 00） */
+function addrFromPickers() {
+  const si = Number($("selSutra").value);
+  if (!SUTRAS || !SUTRAS[si]) return "";
+  const pv = $("selPage").value, cv = $("selCol").value, lv = $("selLine").value;
+  if (pv === "" || cv === "" || lv === "") return "";
+  return "T" + pad(SUTRAS[si].tVol, 2) + "p" + pad(Number(pv), 4) + COL[Number(cv)] + pad(Number(lv), 2) + "00";
+}
+/** 由位址回填下拉選單 */
+function syncPickers(addr) {
+  const m = /^T(\d{1,2})p?(\d{4})([a-g])(\d{2})/i.exec(String(addr || "").trim());
+  if (!m || !SUTRAS) return;
+  const vol = Number(m[1]), seq = seqOfPcl(m[2] + m[3].toLowerCase() + m[4]);
+  const i = locate(vol, seq);
+  if (i < 0) return;
+  const e = IDX[i];
+  const si = SUTRAS.findIndex(s => s.ts === e.ts && s.tVol === e.tVol);
+  if (si < 0) return;
+  $("selVol").value = String(e.tVol);
+  fillSutra(e.tVol);
+  $("selSutra").value = String(si);
+  fillJuan(si);
+  $("selJuan").value = String(e.tjuan);
+  const page = Math.floor(seq / 1000), col = Math.floor(seq / 100) % 10, line = seq % 100;
+  fillPage(si, e.tjuan);
+  $("selPage").value = String(page);
+  fillCol(si, e.tjuan, page);
+  $("selCol").value = String(col);
+  fillLine(si, e.tjuan, page, col);
+  $("selLine").value = String(line);
+}
+function cascadeFromSutra() {
+  const si = Number($("selSutra").value);
+  fillJuan(si);
+  cascadeFromJuan();
+}
+function cascadeFromJuan() {
+  const si = Number($("selSutra").value), tj = Number($("selJuan").value);
+  fillPage(si, tj);
+  const p = Number($("selPage").value);      // 重填後瀏覽器會自動選第一項
+  fillCol(si, tj, p);
+  fillLine(si, tj, p, Number($("selCol").value));
+}
+
+/** 轉換並更新結果與經文區（位址若正好是範例，就順便顯示該範例的逐行對照） */
+function renderFor(addr) {
+  renderResult(convertT(addr));
+  const s = SAMPLES.find(x => x.demo === String(addr).trim());
+  if (s) showSampleText(s); else showText(NO_TEXT());
+}
+function showSampleText(s) {
+  const rows = s.pairs.map(p => {
+    const n = Math.max(0, Math.min(p.kOff, p.k.length));
+    return '<div class="pair">' +
+      '<div class="side t">' + FLAG_T +
+        '<span class="pcl"><a class="pclink" href="' + satUrl(s.tsutra, s.tVol, p.tPcl) + '" target="_blank" rel="noopener" title="在 SAT 官網開啟此行">T' + pad(s.tVol, 2) + "p" + esc(p.tPcl) + '</a>' +
+        '<a href="' + cbetaUrl(s.tsutra, s.tjuan) + '" target="_blank" rel="noopener" title="在 CBETA 開啟本卷"><svg class="ico2" viewBox="0 0 24 24" aria-hidden="true"><path d="M11 4.6C9.6 3.6 7.6 3 5.4 3H3v15h2.6c2 0 3.8.6 5.4 1.7V4.6zm2 0v15.1c1.6-1.1 3.4-1.7 5.4-1.7H21V3h-2.4c-2.2 0-4.2.6-5.6 1.6z"/></svg></a></span>' +
+        '<span class="tx">' + esc(p.t) + "</span></div>" +
+      '<div class="side k">' + FLAG_K +
+        '<span class="pcl"><a class="pclink" href="' + dongUrl(s.ksutra, s.kjuan, s.kVol, p.kPcl) + '" target="_blank" rel="noopener" title="在東國大學高麗大藏經開啟此行">K' + pad(s.kVol, 2) + "p" + esc(p.kPcl) + '</a></span>' +
+        '<span class="tx">' +
+        '<span class="pre">' + esc(p.k.slice(0, n)) + '</span>' +
+        '<span class="post">' + esc(p.k.slice(n)) + '</span>' +
+      "</span></div></div>";
+  }).join("");
+  showText('<div class="card"><div class="cap"><b>' + esc(s.name) + "</b>　" + esc(s.note) +
+    "　·　大正藏 T" + s.tsutra + " ⇄ 高麗藏 K" + s.ksutra +
+    '<br><span style="display:inline-flex;align-items:center;gap:5px;vertical-align:middle">' + FLAG_T + '大正藏</span>　<span style="display:inline-flex;align-items:center;gap:5px;vertical-align:middle">' + FLAG_K + '高麗藏</span>　·　第二行<strong>深色段</strong>＝與上一行對應的正文</div>' + rows + "</div>");
+}
+
+/** 範例鈕：把位址填進去、下拉同步、顯示該範例的逐行對照 */
+function renderSample(s) {
+  $("addr").value = s.demo;
+  syncPickers(s.demo);
+  renderFor(s.demo);
+}
+function pickerChanged() {
+  const a = addrFromPickers();
+  if (!a) return;
+  $("addr").value = a;
+  renderFor(a);
+}
+function init() {
+  buildIndex();
+  fillVol();
+  fillSutra(VOLS[0]);
+  cascadeFromSutra();
+  const box = $("samples");
+  box.innerHTML = SAMPLES.map((s, i) =>
+    '<button data-i="' + i + '"><b>' + esc(s.name) + "</b><span>" + esc(s.note) + "</span></button>").join("");
+  box.addEventListener("click", e => {
+    const b = e.target.closest ? e.target.closest("button[data-i]") : null;
+    if (b) renderSample(SAMPLES[Number(b.dataset.i)]);
+  });
+  $("selVol").addEventListener("change", () => { cascadeFromVol(); pickerChanged(); });
+  $("selSutra").addEventListener("change", () => { cascadeFromSutra(); pickerChanged(); });
+  $("selJuan").addEventListener("change", () => { cascadeFromJuan(); pickerChanged(); });
+  $("selPage").addEventListener("change", () => {
+    const si = Number($("selSutra").value), tj = Number($("selJuan").value), p = Number($("selPage").value);
+    fillCol(si, tj, p);
+    fillLine(si, tj, p, Number($("selCol").value));
+    pickerChanged();
+  });
+  $("selCol").addEventListener("change", () => {
+    fillLine(Number($("selSutra").value), Number($("selJuan").value), Number($("selPage").value), Number($("selCol").value));
+    pickerChanged();
+  });
+  $("selLine").addEventListener("change", pickerChanged);
+  let timer = null;
+  $("addr").addEventListener("input", () => {          // 手動輸入即時轉換（去抖）
+    if (timer) clearTimeout(timer);
+    timer = setTimeout(() => { const v = $("addr").value; syncPickers(v); renderFor(v); }, 180);
+  });
+  renderSample(SAMPLES[0]);
+}
+
+/* ---- 明暗切換 ---- */
+function applyTheme(mode) {
+  try { document.documentElement.setAttribute("data-theme", mode); } catch (e) {}
+  const b = $("theme");
+  if (!b) return;
+  b.textContent = mode === "dark" ? "亮底" : "暗底";
+  b.setAttribute("aria-pressed", mode === "dark" ? "true" : "false");
+  b.title = mode === "dark" ? "切換為亮底" : "切換為暗底";
+}
+function currentTheme() {
+  try { return document.documentElement.getAttribute("data-theme") === "dark" ? "dark" : "light"; } catch (e) { return "light"; }
+}
+function initTheme() {
+  let mode = "light";
+  try { const s = localStorage.getItem("tmTheme"); if (s === "dark" || s === "light") mode = s; } catch (e) {}
+  applyTheme(mode);
+  const b = $("theme");
+  if (!b) return;
+  b.addEventListener("click", () => {
+    const next = currentTheme() === "dark" ? "light" : "dark";
+    applyTheme(next);
+    try { localStorage.setItem("tmTheme", next); } catch (e) {}
+  });
+}
+initTheme();
+
+(async () => {
+  const el = $("hint");
+  try {
+    el.textContent = "　載入對照資料…";
+    await load();
+    el.textContent = "";
+    init();
+  } catch (err) {
+    el.textContent = "　載入失敗：" + err;
+    showText('<div class="none">資料載入失敗。<br>請確認使用的是較新的瀏覽器（Chrome 80+、Firefox 113+、Safari 16.4+）。</div>');
+  }
+})();
+</script>
+</body>
+</html>
